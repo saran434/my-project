@@ -8,8 +8,8 @@ import (
 
 func TestValidateRegisterRequest(t *testing.T) {
 	req := models.RegisterRequest{
-		Name:     "Jane Doe",
-		Email:    "  JANE@EXAMPLE.COM  ",
+		Name:     "saran",
+		Email:    "  saran@EXAMPLE.COM  ",
 		Password: "secret123",
 	}
 
