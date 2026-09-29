@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"os"
 
@@ -11,6 +12,19 @@ import (
 func main() {
 	setupmod.SetupDatabase()
 	r := setupmod.SetupRouter()
-	log.Println(os.Getenv("SERVER_PROTOCOL"), "server started on", os.Getenv("SERVER_HOST")+":"+os.Getenv("SERVER_PORT"))
-	log.Fatal(http.ListenAndServe(os.Getenv("SERVER_PORT"), r))
+	serverProtocol := os.Getenv("SERVER_PROTOCOL")
+
+	serverHost := os.Getenv("SERVER_HOST")
+	serverPort := os.Getenv("SERVER_PORT")
+
+	listenAddress := net.JoinHostPort(serverHost, serverPort)
+	displayHost := serverHost
+
+	serverURL := serverProtocol + "://" + net.JoinHostPort(displayHost, serverPort)
+	os.Setenv("SERVER_PROTOCOL", serverProtocol)
+	log.Println("Server Protocol:", os.Getenv("SERVER_PROTOCOL"))
+	log.Println("Server Host:", serverHost)
+	log.Println("Server Port:", serverPort)
+	log.Println("Server URL:", serverURL)
+	log.Fatal(http.ListenAndServe(listenAddress, r))
 }
