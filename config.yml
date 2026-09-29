@@ -1,3 +1,4 @@
+database:
 host: 192.168.75.95
 port: 5432
 user: postgres
