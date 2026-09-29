@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	setupmod "employeejwt/internal/setup.go"
 )
@@ -10,6 +11,6 @@ import (
 func main() {
 	setupmod.SetupDatabase()
 	r := setupmod.SetupRouter()
-	log.Println("Server running on http://localhost:8081")
-	log.Fatal(http.ListenAndServe(":8081", r))
+	log.Println(os.Getenv("SERVER_PROTOCOL"), "server started on", os.Getenv("SERVER_HOST")+":"+os.Getenv("SERVER_PORT"))
+	log.Fatal(http.ListenAndServe(os.Getenv("SERVER_PORT"), r))
 }
