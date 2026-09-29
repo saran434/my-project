@@ -14,7 +14,7 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	cfg := config.Load()
+	cfg := config.LoadDB()
 
 	host := config.Pick(cfg.Host, "DB_HOST")
 	port := config.Pick(cfg.Port, "DB_PORT")

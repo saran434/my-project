@@ -27,7 +27,7 @@ type serverFileConfig struct {
 	ServerPort ServerConfig `yaml:"serverport"`
 }
 
-func Load() DBConfig {
+func LoadDB() DBConfig {
 	var cfg DBConfig
 	data, err := os.ReadFile("config.yml")
 	if err != nil {
