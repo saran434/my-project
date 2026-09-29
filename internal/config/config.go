@@ -17,6 +17,16 @@ type DBConfig struct {
 	SSLMode  string `yaml:"sslmode"`
 }
 
+type ServerConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Protocol string `yaml:"protocol"`
+}
+
+type serverFileConfig struct {
+	ServerPort ServerConfig `yaml:"serverport"`
+}
+
 func Load() DBConfig {
 	var cfg DBConfig
 	data, err := os.ReadFile("config.yml")
@@ -29,6 +39,18 @@ func Load() DBConfig {
 	}
 	fmt.Println("config.yml unmarshaled successfully")
 	return cfg
+}
+
+func LoadServer() ServerConfig {
+	var fileConfig serverFileConfig
+	data, err := os.ReadFile("serverport.yml")
+	if err != nil {
+		log.Fatalf("failed to read file %s: %v", "serverport.yml", err)
+	}
+	if err := yaml.Unmarshal(data, &fileConfig); err != nil {
+		log.Fatalf("failed to unmarshal server YAML: %v", err)
+	}
+	return fileConfig.ServerPort
 }
 
 func Pick(cfgVal, envKey string) string {
