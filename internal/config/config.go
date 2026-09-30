@@ -50,6 +50,7 @@ func LoadServer() ServerConfig {
 	if err := yaml.Unmarshal(data, &fileConfig); err != nil {
 		log.Fatalf("failed to unmarshal server YAML: %v", err)
 	}
+	fmt.Println("serverport.yml unmarshaled successfully")
 	return fileConfig.ServerPort
 }
 
