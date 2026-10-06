@@ -1,4 +1,4 @@
 serverport:
   port: 8081
   host: localhost
-  protocol: https
+  protocol: http
