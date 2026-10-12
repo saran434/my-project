@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -62,10 +61,10 @@ func Pick(cfgVal, envKey string) string {
 	return os.Getenv(envKey)
 }
 
-func Auth0Issuer() string {
-	return strings.TrimSpace(os.Getenv("AUTH0_ISSUER"))
-}
-
-func Auth0Audience() string {
-	return strings.TrimSpace(os.Getenv("AUTH0_AUDIENCE"))
+func JWTSecret() string {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "supersecretjwtkey"
+	}
+	return secret
 }

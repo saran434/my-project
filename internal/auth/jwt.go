@@ -1,59 +1,56 @@
 package auth
 
 import (
-	"context"
-	"fmt"
-	"net/url"
+	"errors"
+	"log"
 	"time"
 
 	"employeejwt/internal/config"
 
-	"github.com/auth0/go-jwt-middleware/v2/jwks"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-type TokenValidator struct {
-	validator *validator.Validator
+type Claims struct {
+	UserID int    `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
 }
 
-func NewTokenValidator() (*TokenValidator, error) {
-	issuer := config.Auth0Issuer()
-	audience := config.Auth0Audience()
-	if issuer == "" || audience == "" {
-		return nil, fmt.Errorf("AUTH0_ISSUER and AUTH0_AUDIENCE must both be configured")
+func GenerateToken(userID int, email string) (string, error) {
+	claims := Claims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	}
 
-	issuerURL, err := url.Parse(issuer)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(config.JWTSecret()))
 	if err != nil {
-		return nil, fmt.Errorf("invalid AUTH0_ISSUER: %w", err)
+		log.Printf("auth.GenerateToken: failed for userID %d email %s: %v", userID, email, err)
+		return "", err
 	}
-	if issuerURL.Scheme != "https" || issuerURL.Host == "" {
-		return nil, fmt.Errorf("AUTH0_ISSUER must be an HTTPS issuer URL")
-	}
-
-	keyProvider := jwks.NewCachingProvider(issuerURL, 5*time.Minute)
-	return newTokenValidator(issuer, audience, keyProvider.KeyFunc)
+	return tokenString, nil
 }
 
-func newTokenValidator(issuer, audience string, keyFunc func(context.Context) (interface{}, error)) (*TokenValidator, error) {
-	jwtValidator, err := validator.New(
-		keyFunc,
-		validator.RS256,
-		issuer,
-		[]string{audience},
-		validator.WithAllowedClockSkew(30*time.Second),
-	)
+func ValidateToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ClaimsValid := token.Method.(*jwt.SigningMethodHMAC); !ClaimsValid {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(config.JWTSecret()), nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("configure Auth0 token validator: %w", err)
+		log.Printf("auth.ValidateToken: parse failed: %v", err)
+		return nil, err
 	}
 
-	return &TokenValidator{validator: jwtValidator}, nil
-}
-
-func (v *TokenValidator) ValidateToken(tokenString string) error {
-	_, err := v.validator.ValidateToken(context.Background(), tokenString)
-	if err != nil {
-		return fmt.Errorf("validate Auth0 access token: %w", err)
+	claims, ClaimsValid := token.Claims.(*Claims)
+	if !ClaimsValid || !token.Valid {
+		log.Printf("auth.ValidateToken: invalid token claims for token %q", tokenString)
+		return nil, errors.New("invalid token")
 	}
-	return nil
+	return claims, nil
 }

@@ -18,10 +18,7 @@ func main() {
 	log.Println("Server Host:", serverConfig.Host)
 	log.Println("Server Port:", serverConfig.Port)
 	log.Println("Server URL:", serverURL)
-	r, err := setupmod.SetupRouter()
-	if err != nil {
-		log.Fatal("configure authentication: ", err)
-	}
 	setupmod.SetupDatabase()
+	r := setupmod.SetupRouter()
 	log.Fatal(http.ListenAndServe(listenAddress, r))
 }
